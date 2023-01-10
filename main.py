@@ -129,8 +129,8 @@ async def update_user(user_update: User,user_id: int):
                 user.phone_num = user_update.phone_num
             if user_update.email is not None:
                 user.email = user_update.email
-            if user_update.email is not None:
-                user.email = user_update.email
+            if user_update.password is not None:
+                user.password = user_update.password
             db.session.commit()
             return user
     raise HTTPException(
