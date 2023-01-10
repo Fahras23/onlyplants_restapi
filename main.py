@@ -125,12 +125,19 @@ async def update_user(user_update: User,user_id: int):
         if user.id == user_id:
             if user_update.nickname is not None:
                 user.nickname = user_update.nickname
-                db.session.commit()
+            if user_update.phone_num is not None:
+                user.phone_num = user_update.phone_num
+            if user_update.email is not None:
+                user.email = user_update.email
+            if user_update.email is not None:
+                user.email = user_update.email
+            db.session.commit()
             return user
     raise HTTPException(
         status_code=404,
         detail=f"user with id: {user_id} does not exists"
     )
+
   
 # To run locally
 if __name__ == '__main__':
