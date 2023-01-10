@@ -125,7 +125,7 @@ async def update_user(user_update: User,user_id: int):
         if user.id == user_id:
             if user_update.nickname is not None:
                 user.nickname = user_update.nickname
-            
+                db.session.commit()
             return user
     raise HTTPException(
         status_code=404,
