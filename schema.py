@@ -3,6 +3,18 @@ from typing import List
 from pydantic import BaseModel
 from datetime import date
 
+
+
+class AuthDetails(BaseModel):
+    username: str
+    password: str
+    
+class Roles(BaseModel):
+    id: int
+    name: str
+    class Config:
+        orm_mode = True
+
 class Loyalty_Plan(BaseModel):
     id: int
     offer_limit: int
@@ -21,11 +33,16 @@ class Comment(BaseModel):
 class User(BaseModel):
     id: int
     nickname: str
+    surname: str
+    name: str
     phone_num: int
     born_date: date
     email: str
     password: str
- 
+    ad_amount: int
+    loyalty_plan_id: int
+    roles_id: int   
+
     class Config:
         orm_mode = True
 

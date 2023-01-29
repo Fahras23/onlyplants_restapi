@@ -5,22 +5,20 @@ from sqlalchemy.sql import func
 from typing import Optional
 
 Base  = declarative_base()
+class Roles(Base):
+    __tablename__ = 'roles'
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String,nullable=True)
 
 class Loyalty_Plan(Base):
     __tablename__ = 'loyalty_plan'
     id = Column(Integer, primary_key=True, index=True)
     offer_limit = Column(Integer)
     if_premium = Column(Boolean,nullable=True) 
-    subscription_plan = Column(String,nullable=True)
+    subscription_plan = Column(Boolean,nullable=True) 
 
-class Comment(Base):
-    __tablename__ = 'comment'
-    id = Column(Integer, primary_key=True, index=True)
-    content = Column(String)
-    comment_date = Column(DateTime(timezone=True), server_default=func.now())
-
-class User(Base):
-    __tablename__ = 'user'
+class Users(Base):
+    __tablename__ = 'users'
     id  = Column(Integer, primary_key=True, index=True)
     name = Column(String,nullable=True)
     surname = Column(String,nullable=True)
@@ -30,11 +28,20 @@ class User(Base):
     phone_num = Column(Integer,nullable=True)
     born_date = Column(Date,nullable=True)
     ad_amount = Column(Integer,nullable=True)
-    comment_id = Column(Integer, ForeignKey('comment.id'),nullable=True)
-    comment = relationship('Comment')
+    loyalty_plan_id = Column(Integer, ForeignKey('loyalty_plan.id'),nullable=True)
+    loyalty_plan = relationship('Loyalty_Plan')    
+    roles_id = Column(Integer, ForeignKey('roles.id'),nullable=True)
+    roles = relationship('Roles')   
     
-
-
+class Comment(Base):
+    __tablename__ = 'comment'
+    id = Column(Integer, primary_key=True, index=True)
+    content = Column(String)
+    comment_date = Column(DateTime(timezone=True), server_default=func.now())
+    user_id = Column(Integer, ForeignKey('users.id'),nullable=True)
+    user = relationship('Users')    
+    offer_id = Column(Integer, ForeignKey('offer.id'),nullable=True)
+    offer = relationship('Offer')    
 
 class Plant(Base):
     __tablename__ = 'plant'
@@ -54,13 +61,11 @@ class Offer(Base):
     photo = Column(String,nullable=True)
     time_created = Column(DateTime(timezone=True), server_default=func.now())
     if_premium = Column(Boolean,nullable=True) 
-    user_id = Column(Integer, ForeignKey('user.id'))
-    user = relationship('User')
+    user_id = Column(Integer, ForeignKey('users.id'))
+    user = relationship('Users')
     plant_id = Column(Integer, ForeignKey('plant.id'))
     plant = relationship('Plant')
-    comment_id = Column(Integer, ForeignKey('comment.id'))
-    comment = relationship('Comment')
-    
+   
     
    
 
