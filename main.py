@@ -1,4 +1,3 @@
-import uvicorn
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi_sqlalchemy import DBSessionMiddleware, db
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -206,6 +205,3 @@ async def update_user(comment_update: Comment,comment_id: int):
         detail=f"user with id: {comment_id} does not exists"
     )
 
-# To run locally
-if __name__ == '__main__':
-    uvicorn.run(app, host='0.0.0.0', port=8000)
