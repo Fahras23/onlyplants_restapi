@@ -39,7 +39,7 @@ def register(auth_details: AuthDetails):
         'username': auth_details.username,
         'password': hashed_password    
     })
-    return
+    return f"registered {auth_details.username}"
 
 @app.post('/login')
 def login(auth_details: AuthDetails):
@@ -65,7 +65,7 @@ async def root():
 
 def get(item,model):
     @app.get(f'/api/v1/{item}s')
-    async def items():
+    async def items(username=Depends(auth_handler.auth_wrapper)):
         items = db.session.query(model).all()
         return items
 
@@ -87,7 +87,7 @@ async def add_plan(plan:Loyalty_Plan,username=Depends(auth_handler.auth_wrapper)
     return plan
 
 @app.post('/api/v1/comments')
-async def add_comment(comment: Comment):
+async def add_comment(comment: Comment,username=Depends(auth_handler.auth_wrapper)):
     db_comment = ModelComment(
     id = comment.id,
     content = comment.content,
@@ -129,7 +129,7 @@ async def add_plant(plant:Plant,username=Depends(auth_handler.auth_wrapper)):
     return plant
 
 @app.post('/api/v1/offers')
-async def add_offer(offer:Offer):
+async def add_offer(offer:Offer,username=Depends(auth_handler.auth_wrapper)):
     db_offer = ModelOffer(
     id = offer.id,
     user_id = offer.user_id,
@@ -151,7 +151,7 @@ def delete(item,model):
                 return
         raise HTTPException(
             status_code = 404,
-            detail=f"user with id: {item_id} does not exists"
+            detail=f"{item} with id: {item_id} does not exists"
     )
 
 delete("plan",ModelPlan)
@@ -161,15 +161,11 @@ delete("plant",ModelPlant)
 delete("offer",ModelOffer)
 
 @app.put("/api/v1/users/{user_id}")
-async def update_user(user_update: User,user_id: int):
+async def update_user(user_update: User,user_id: int,username=Depends(auth_handler.auth_wrapper)):
     for user in db.session.query(ModelUser).all():
         if user.id == user_id:
             if user_update.nickname is not None:
                 user.nickname = user_update.nickname
-            if user_update.phone_num is not None:
-                user.phone_num = user_update.phone_num
-            if user_update.email is not None:
-                user.email = user_update.email
             if user_update.password is not None:
                 user.password = user_update.password
             db.session.commit()
@@ -179,29 +175,27 @@ async def update_user(user_update: User,user_id: int):
         detail=f"user with id: {user_id} does not exists"
     )
 
-@app.put("/api/v1/users/{user_id}")
-async def update_user(user_update: User,user_id: int):
-    for user in db.session.query(ModelUser).all():
-        if user.id == user_id:
-            if user_update.nickname and user_update.password:
-                user = user_update
-                db.session.commit()
-
-    raise HTTPException(
-        status_code=404,
-        detail=f"user with id: {user_id} does not exists"
-    )
-
 @app.put("/api/v1/comments/{comment_id}")
-async def update_user(comment_update: Comment,comment_id: int):
+async def update_comment(comment_update: Comment,comment_id: int,username=Depends(auth_handler.auth_wrapper)):
     for comment in db.session.query(ModelComment).all():
         if comment.id == comment_id:
-            if comment_update.content:
-                comment = comment_update
-                db.session.commit()
-                
+            if comment_update.content is not None:
+                comment.content = comment_update.content
+            db.session.commit()
+            return comment
     raise HTTPException(
         status_code=404,
-        detail=f"user with id: {comment_id} does not exists"
+        detail=f"comment with id: {comment_id} does not exists"
     )
-
+@app.put("/api/v1/offers/{offer_id}")
+async def update_offer(offer_update: Offer,offer_id: int,username=Depends(auth_handler.auth_wrapper)):
+    for offer in db.session.query(ModelOffer).all():
+        if offer.id == offer_id:
+            if offer_update.title is not None:
+                offer.title = offer_update.title
+            db.session.commit()
+            return offer
+    raise HTTPException(
+        status_code=404,
+        detail=f"offer with id: {offer_id} does not exists"
+    )
