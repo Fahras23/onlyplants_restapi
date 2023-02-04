@@ -31,27 +31,35 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 
 #login and register system
 @app.post('/register', status_code=201)
-def register(auth_details: AuthDetails):
-    if any(x['username'] == auth_details.username for x in users):
-        raise HTTPException(status_code=400, detail='Username is taken')
-    hashed_password = auth_handler.get_password_hash(auth_details.password)
-    users.append({
-        'username': auth_details.username,
-        'password': hashed_password    
-    })
-    return f"registered {auth_details.username}"
+def register(user: AuthDetails):
+    user_exist = None
+    #if any(x['username'] == auth_details.username for x in users):
+        #raise HTTPException(status_code=400, detail='Username is taken')
+    hashed_password = auth_handler.get_password_hash(user.password)
+    for user_in_database in db.session.query(ModelUser).all():
+            if user_in_database.nickname == user.username:
+                user_exist = True
+                if user.username is not None:
+                    user_in_database.nickname = user.username
+                if user.password is not None:
+                    user_in_database.password = user.password
+                db.session.commit()
+
+    return f"registered {user}"
 
 @app.post('/login')
-def login(auth_details: AuthDetails):
-    user = None
-    for x in users:
-        if x['username'] == auth_details.username:
-            user = x
+def login(user: AuthDetails):
+    #user = None
+    db_user = None
+    for db_user in db.session.query(ModelUser).all():
+        if db_user == user.username:
+            user = db_user
+            db_user = db_user
             break
     
-    if (user is None) or (not auth_handler.verify_password(auth_details.password, user['password'])):
+    if (user is None) or (not auth_handler.verify_password(user.password, db_user.password)):
         raise HTTPException(status_code=401, detail='Invalid username and/or password')
-    token = auth_handler.encode_token(user['username'])
+    token = auth_handler.encode_token(user.username)
     return { 'token': token }
 
 @app.get('/protected')
@@ -65,7 +73,7 @@ async def root():
 
 def get(item,model):
     @app.get(f'/api/v1/{item}s')
-    async def items(username=Depends(auth_handler.auth_wrapper)):
+    async def items():
         items = db.session.query(model).all()
         return items
 
