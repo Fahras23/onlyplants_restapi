@@ -31,9 +31,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 #login and register system
 @app.post('/register', status_code=201)
 def register(user: AuthDetails):
-    user_exist = None
-    #if any(x['username'] == auth_details.username for x in users):
-        #raise HTTPException(status_code=400, detail='Username is taken')
+    user_exist = False
+
     hashed_password = auth_handler.get_password_hash(user.password)
     for user_in_database in db.session.query(ModelUser).all():
             if user_in_database.nickname == user.username:
@@ -43,19 +42,24 @@ def register(user: AuthDetails):
                 if user.password is not None:
                     user_in_database.password = hashed_password
                 db.session.commit()
+                break
+               
+    if user_exist==False:
+        raise HTTPException(status_code=400, detail='user doesnt exist')
 
     return f"registered {user.username}"
 
 @app.post('/login')
 def login(user: AuthDetails):
+    token_user = None
     for db_user in db.session.query(ModelUser).all():
         if db_user.nickname == user.username:
-            user = db_user
+            token_user = db_user
             break
     
-    #if (user is None) or (not auth_handler.verify_password(user.password, db_user_check.password)):
-        #raise HTTPException(status_code=401, detail='Invalid username and/or password')
-    token = auth_handler.encode_token(user.nickname)
+    if (token_user is None) or (not auth_handler.verify_password(user.password, token_user.password)):
+        raise HTTPException(status_code=401, detail='Invalid username and/or password')
+    token = auth_handler.encode_token(token_user.nickname)
     return { 'token': token }
 
 @app.get('/protected')
