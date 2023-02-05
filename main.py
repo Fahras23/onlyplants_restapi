@@ -21,7 +21,6 @@ load_dotenv('.env')
 
 
 app = FastAPI()
-users = []
 auth_handler = AuthHandler()
 
 # to avoid csrftokenError
@@ -42,24 +41,21 @@ def register(user: AuthDetails):
                 if user.username is not None:
                     user_in_database.nickname = user.username
                 if user.password is not None:
-                    user_in_database.password = user.password
+                    user_in_database.password = hashed_password
                 db.session.commit()
 
-    return f"registered {user}"
+    return f"registered {user.username}"
 
 @app.post('/login')
 def login(user: AuthDetails):
-    #user = None
-    db_user = None
     for db_user in db.session.query(ModelUser).all():
-        if db_user == user.username:
+        if db_user.nickname == user.username:
             user = db_user
-            db_user = db_user
             break
     
-    if (user is None) or (not auth_handler.verify_password(user.password, db_user.password)):
-        raise HTTPException(status_code=401, detail='Invalid username and/or password')
-    token = auth_handler.encode_token(user.username)
+    #if (user is None) or (not auth_handler.verify_password(user.password, db_user_check.password)):
+        #raise HTTPException(status_code=401, detail='Invalid username and/or password')
+    token = auth_handler.encode_token(user.nickname)
     return { 'token': token }
 
 @app.get('/protected')
@@ -105,7 +101,7 @@ async def add_comment(comment: Comment,username=Depends(auth_handler.auth_wrappe
     return comment
 
 @app.post('/api/v1/users')
-async def add_user(user:User,username=Depends(auth_handler.auth_wrapper)):
+async def add_user(user:User):
     db_user = ModelUser(
     id = user.id,
     name = user.name,
