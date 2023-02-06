@@ -17,6 +17,7 @@ class Loyalty_Plan(Base):
     if_premium = Column(Boolean,nullable=True) 
     subscription_plan = Column(Boolean,nullable=True) 
 
+#users not user because user is taken by postgres
 class Users(Base):
     __tablename__ = 'users'
     id  = Column(Integer, primary_key=True, index=True)
